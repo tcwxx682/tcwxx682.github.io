@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>文件在线传输</title>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	</head>
+<body>
+<div class="main">
+    <div class="input">
+		<button id="btn" style="position:relative;width:80%;height:100%;border-radius:25px;border: 1px solid #0681FF;background-color: #ffffff;">
+				<input id="fileUp" type="file" readonly="readonly" placeholder="上传文件" style="opacity:0;width:100%;height:100%;position:absolute;top:0;left:0;" />
+				<p>上传文件</p>
+		</button>
+	    <a href="#" style="margin-top:10px;margin-left:10px;">确认上传</a>
+	</div>
+	<div class="upload">
+		<input type="text" placeholder="请输入下载码后按回车键" style="position:relative;width:80%;height:100%;border-radius:25px;border: 1px solid #0681FF;background-color: #ffffff;text-align: center;"/>
+	</div>
+</div>
+</body>
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+<script>
+	var file;
+$(".input input").change(function(e){
+	if(e.currentTarget.files.length>1)
+	{
+		alert('一次只能上传一个文件，若要同时上传多个文件，请进行压缩后上传！');
+		return;
+	}
+    file=e.currentTarget.files[0];
+    if(file.size>524288000){
+        alert("上传文件大小不能超过500MB！");
+        $('input').val('');
+        file=null;
+        return;
+    }
+	var fileName=file.name;
+	$("p").text(fileName);
+});
+
+$("a").click(function(e){
+if(file==undefined||file==null){
+	alert('请先选择需要上传的文件！');
+	return;
+}
+
+$.MsgBox.Alert("进度","ssd");
+uploadFile();
+})
+
+$('.upload input').bind('keypress',function(event){
+    if(event.keyCode=='13'){
+        let inValue=$('.upload input').val();
+        if(inValue==null||inValue=='')
+            return;
+
+        window.location.href='DownLoad.ashx?XZM='+inValue;
+        //download(inValue);
+    }
+})
+
+function download(XZM){
+         $.ajax({
+             url:"DownLoad.ashx",
+             method:"post",
+             data : {
+                 XZM:XZM
+             },
+             success: function(response, status, request) {
+                 var employeeId = XZM;
+                 var disp = request.getResponseHeader('Content-Disposition');
+                if (response=="fail") {
+                    alert("下载失败!");
+                    return;
+                }
+                 var form = $('<form method="POST" action="DownLoad.ashx">');
+                 form.append($('<input type="hidden" name="employeeId" value="'+ employeeId +'">'));
+                 $('body').append(form);
+                 form.submit();
+             },
+
+         })
+ 
+    }
+
+function test() {
+    //alert("你点击了确定,重新进行认证");
+}
+
+(function() {
+    $.MsgBox = {
+        Alert: function(title, msg) {
+            GenerateHtml("alert", title, msg);
+            btnOk(); //alert只是弹出消息，因此没必要用到回调函数callback
+            btnNo();
+        },
+        Confirm: function(title, msg, callback) {
+            GenerateHtml("confirm", title, msg);
+            btnOk(callback);
+            btnNo();
+        }
+    }
+    //生成Html
+    var GenerateHtml = function(type, title, msg) {
+        var _html = "";
+        _html += '<div id="mb_box"></div><div id="mb_con"><span id="mb_tit">' + title + '</span>';
+        _html += '<a id="mb_ico">x</a><div id="progress"><div id="mb_proc"></div></div><div id="mb_btnbox">';
+        // if (type == "alert") {
+        //     _html += '<input id="mb_btn_ok" type="button" value="确定" />';
+        // }
+        // if (type == "confirm") {
+        //     _html += '<input id="mb_btn_ok" type="button" value="确定" />';
+        //     _html += '<input id="mb_btn_no" type="button" value="取消" />';
+        // }
+        _html +='<h2 style="text-align=center;">0%</h2><strong></strong><input id="mb_btn_no" type="button" value="取消" />'
+        _html += '</div></div>';
+        //必须先将_html添加到body，再设置Css样式
+        $("body").append(_html);
+        //生成Css
+        GenerateCss();
+    }
+
+    //生成Css
+    var GenerateCss = function() {
+        $("#mb_box").css({
+            width: '100%',
+            height: '100%',
+            zIndex: '99999',
+            position: 'fixed',
+            filter: 'Alpha(opacity=60)',
+            backgroundColor: 'black',
+            top: '0',
+            left: '0',
+            opacity: '0.6'
+        });
+        $("#mb_con").css({
+            zIndex: '999999',
+            width: '400px',
+            position: 'fixed',
+            backgroundColor: 'White',
+            borderRadius: '15px'
+        });
+        $("#mb_tit").css({
+            display: 'block',
+            fontSize: '14px',
+            color: '#444',
+            padding: '10px 15px',
+            backgroundColor: '#DDD',
+            borderRadius: '15px 15px 0 0',
+            borderBottom: '3px solid #009BFE',
+            fontWeight: 'bold'
+        });
+        $("#progress").css({
+			width: '99%',
+    		height: '10px',
+			border: '1px solid #ccc',
+			"border-radius": '10px',
+            margin: '10px 0px',
+            overflow: 'hidden',
+			margintop:'30px'
+        });
+		$("#mb_proc").css({
+			"width": '0px',    
+    		"height": '100%',
+    		"background-color": 'yellowgreen',
+    		"transition": 'all .3s ease'
+		})
+        $("#mb_ico").css({
+            display: 'block',
+            position: 'absolute',
+            right: '10px',
+            top: '9px',
+            border: '1px solid Gray',
+            width: '18px',
+            height: '18px',
+            textAlign: 'center',
+            lineHeight: '16px',
+            cursor: 'pointer',
+            borderRadius: '12px',
+            fontFamily: '微软雅黑'
+        });
+        $("#mb_btnbox").css({
+            margin: '15px 0 10px 0',
+            textAlign: 'center'
+        });
+        $("#mb_btn_ok,#mb_btn_no").css({
+            width: '85px',
+            height: '30px',
+            color: 'white',
+            border: 'none'
+        });
+        $("#mb_btn_ok").css({
+            backgroundColor: '#168bbb'
+        });
+        $("#mb_btn_no").css({
+            backgroundColor: 'gray',
+            marginLeft: '20px'
+        });
+        //右上角关闭按钮hover样式
+        $("#mb_ico").hover(function() {
+            $(this).css({
+                backgroundColor: 'Red',
+                color: 'White'
+            });
+        }, function() {
+            $(this).css({
+                backgroundColor: '#DDD',
+                color: 'black'
+            });
+        });
+        var _widht = document.documentElement.clientWidth; //屏幕宽
+        var _height = document.documentElement.clientHeight; //屏幕高
+        var boxWidth = $("#mb_con").width();
+        var boxHeight = $("#mb_con").height();
+        //让提示框居中
+        $("#mb_con").css({
+            top: (_height - boxHeight) / 2 + "px",
+            left: (_widht - boxWidth) / 2 + "px"
+        });
+    }
+    //确定按钮事件
+    var btnOk = function(callback) {
+        $("#mb_btn_ok").click(function() {
+            $("#mb_box,#mb_con").remove();
+            if (typeof(callback) == 'function') {
+                callback();
+            }
+        });
+    }
+    //取消按钮事件
+    var btnNo = function() {
+        $("#mb_btn_no,#mb_ico").click(function() {
+            upload.abort();
+            $("#mb_box,#mb_con").remove();
+        });
+    }
+})();
+
+var upload;
+
+function uploadFile() {
+    //获取上传的文件
+
+    var formdata = new FormData();
+
+    formdata.append('file', file);
+   upload = $.ajax({
+                    type:"post",
+                    async:true,  //这里要设置异步上传，才能成功调用myXhr.upload.addEventListener('progress',function(e){}),progress的回掉函数
+                    Accept:'text/html;charset=UTF-8',
+                    data:formdata,
+                    contentType:"multipart/form-data",
+                    url: 'UpLoad.ashx',
+                    processData: false, // 告诉jQuery不要去处理发送的数据
+                    contentType: false, // 告诉jQuery不要去设置Content-Type请求头
+                    xhr:function(){                        
+                        myXhr = $.ajaxSettings.xhr();
+                        if(myXhr.upload){ // check if upload property exists
+                            myXhr.upload.addEventListener('progress',function(e){                            
+                                var loaded = e.loaded;                  //已经上传大小情况 
+                                var total = e.total;                      //附件总大小 
+                                var percent = Math.floor(100*loaded/total)+"%";     //已经上传的百分比  
+                                console.log("已经上传了："+percent);
+                                $('h2').text(percent);                 
+                                $("#mb_proc").css("width",percent);                                                                
+                            }, false); // for handling the progress of the upload
+                        }
+                        return myXhr;
+                    },                    
+                    success:function(data){          
+                        if(upload!=undefined||upload!=null){
+                            var code=JSON.parse(data).DownLoadCode;   
+                            $('h2').text('上传成功！');    
+                            $('strong').text('下载码：'+code);   
+                        }              
+                    },
+                    error:function(data){
+                        $('h2').text('上传失败！');
+                    }
+                }); 
+}
+// $("#fileUp").blur(function(e){
+// 	$(".input button").text("上传文件");
+// });
+</script>
+<style>
+.main{
+	position:absolute;
+	top:0;
+	left:0;
+	height:100%;
+	width: 100%;
+    display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.input{
+    display: flex;
+	flex-direction: row;
+	width: 20%;
+	height: 5%;
+}
+
+.input input {
+	width: 80%;
+	height: 100%;
+	border-radius: 10upx;
+	border: 1upx #0681FF solid;
+	color: #999999;
+}
+
+.upload{
+	display: flex;
+	flex-direction: row;
+	width: 20%;
+	height: 5%;
+	margin-top: 1%;
+	text-align: center;
+}
+</style>
+</html>
